@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from datetime import datetime  # Asegúrate de importar datetime
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['thesaurus_db']
