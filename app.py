@@ -1,29 +1,43 @@
-from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager
-from flask_bcrypt import Bcrypt
+# backend/app.py
+
+from flask import Flask
+from flask_cors import CORS
 from pymongo import MongoClient
+from dotenv import load_dotenv
+import os
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
+# Importar las extensiones
+from extensions import bcrypt, jwt
 
-# Conexión a MongoDB
-client = MongoClient('mongodb://localhost:27017/')
-db = client['thesaurus_db']
+# Cargar variables de entorno
+load_dotenv()
 
-# Inicialización de Bcrypt para encriptar contraseñas
-bcrypt = Bcrypt(app)
+def create_app():
+    app = Flask(__name__)
 
-# Inicialización de JWT
-jwt = JWTManager(app)
+    # Configuración de claves secretas y JWT
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 
-# Importar rutas
-from routes.auth_routes import auth_bp
-from routes.user_routes import user_bp
+    # Configuración de CORS
+    CORS(app, resources={r"/*": {"origins": "http://localhost:3001", "supports_credentials": True}})
 
-# Registro de rutas
-app.register_blueprint(auth_bp, url_prefix='/api/auth')
-app.register_blueprint(user_bp, url_prefix='/api/users')
+    # Inicialización de MongoDB
+    client = MongoClient(os.getenv('MONGO_URI'))
+    app.db = client['thesaurus_db']
+
+    # Inicialización de extensiones
+    bcrypt.init_app(app)
+    jwt.init_app(app)
+
+    # Importar y registrar rutas
+    from routes.auth_routes import auth_bp
+    from routes.user_routes import user_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(user_bp, url_prefix='/api/users')
+
+    return app
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app = create_app()
+    app.run(debug=True, host='0.0.0.0', port=3355)
