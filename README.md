@@ -18,11 +18,12 @@
     │   └── app.py
 ```
 ## GIT
-
-- echo "# asis_alumno_ia_be" >> README.md
-- git init
-- git add README.md
-- git commit -m "first commit"
-- git branch -M main
-- git remote add origin https://github.com/zeron-team/asis_alumno_ia_be.git
-- git push -u origin master
+``` text
+echo "# zrn_asistia_be" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/zeron-team/zrn_asistia_be.git
+git push -u origin main
+```
