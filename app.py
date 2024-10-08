@@ -1,5 +1,7 @@
+# backend/app.py
+
 from flask import Flask
-from flask_cors import CORS  # Asegúrate de importar CORS
+from flask_cors import CORS  # Importar CORS
 from flask_jwt_extended import JWTManager
 from pymongo import MongoClient
 from flask_bcrypt import Bcrypt
@@ -21,8 +23,8 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 
-    # Configuración de CORS: Permitir solicitudes desde el frontend específico
-    CORS(app, resources={r"/api/*": {"origins": ["http://localhost:3001"]}}, supports_credentials=True)
+    # Configurar CORS para permitir solicitudes desde el frontend
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
     # Inicialización de MongoDB
     client = MongoClient(os.getenv('MONGO_URI'))

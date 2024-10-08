@@ -1,3 +1,5 @@
+#backend/routes/openai_routes.py
+
 from flask import Blueprint, request, jsonify
 import openai
 import os
@@ -104,4 +106,44 @@ def generar_cuestionario():
         return jsonify({'error': f'Error de OpenAI: {str(e)}'}), 500
     except Exception as e:
         print(f"Error interno del servidor: {str(e)}")
+        return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
+
+# Ruta para generar la planificación o actividad
+@openai_bp.route('/planificacion', methods=['POST'])
+def generar_planificacion():
+    data = request.get_json()
+
+    if not all(key in data for key in ['tema', 'disciplina', 'nivel', 'grado', 'area', 'selectedOption', 'duracion']):
+        return jsonify({'error': 'Faltan datos para generar la planificación.'}), 400
+
+    # Crear el mensaje basado en los datos enviados desde el frontend
+    option = data['selectedOption']
+    duracion = data['duracion']  # Capturamos la duración
+    
+    if option == 'actividades':
+        prompt = f"Genera una actividad detallada sobre el tema '{data['tema']}' en la disciplina '{data['disciplina']}' para el nivel {data['nivel']} del grado {data['grado']} en el área de {data['area']}, con una duración total de {duracion} minutos, dividida en momentos/modulos con un cronograma."
+    elif option == 'planificacion':
+        prompt = f"Genera una planificación completa de una clase sobre el tema '{data['tema']}' en la disciplina '{data['disciplina']}' para el nivel {data['nivel']} del grado {data['grado']} en el área de {data['area']}. La clase debe tener una duración total de {duracion} minutos. Incluir objetivos, materiales, duración, momentos de la clase, actividades y evaluación."
+    elif option == 'actos_escolares':
+        prompt = f"Genera un guion para un acto escolar sobre el tema '{data['tema']}' para estudiantes de {data['nivel']} del grado {data['grado']}. Incluir roles, discurso y actividades."
+
+    try:
+        # Llamada a OpenAI
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Eres un asistente educativo en Argentina, enfocado en ayudar a docentes a generar actividades y planificación escolar."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=4000,
+            n=1,
+            temperature=0.7,
+        )
+
+        planificacion = response['choices'][0]['message']['content'].strip()
+        return jsonify({'planificacion': planificacion})
+
+    except openai.error.OpenAIError as e:
+        return jsonify({'error': f'Error de OpenAI: {str(e)}'}), 500
+    except Exception as e:
         return jsonify({'error': f'Error interno del servidor: {str(e)}'}), 500
