@@ -1,7 +1,5 @@
 # backend/routes/user_routes.py
 
-# backend/routes/user_routes.py
-
 from flask import Blueprint, jsonify, request, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime, timedelta
@@ -90,7 +88,8 @@ def usuarios_conectados_por_dia():
 
     return jsonify(data), 200
 
-# Obtener todos los usuarios
+
+# Obtener todos los usuarios con el campo de actividad
 @user_bp.route('/all_users', methods=['GET'])
 @jwt_required()
 def get_all_users():
@@ -98,12 +97,21 @@ def get_all_users():
     users = db.usuarios.find()
     user_list = []
     for user in users:
+        # Considerar al usuario como activo si su último ingreso fue en los últimos 5 minutos
+        ahora = datetime.utcnow()
+        activo = False
+        if user.get('ultimo_ingreso'):
+            ultimo_ingreso = user['ultimo_ingreso']
+            diferencia_tiempo = ahora - ultimo_ingreso
+            activo = diferencia_tiempo.total_seconds() < 300  # 300 segundos = 5 minutos
+
         user_data = {
             "_id": str(user["_id"]),
             "usuario": user["usuario"],
             "rol": user["rol"],
             "fecha_alta": user.get("fecha_alta", None),
-            "ultimo_ingreso": user.get("ultimo_ingreso", None)
+            "ultimo_ingreso": user.get("ultimo_ingreso", None),
+            "isActive": activo  # Añadir el campo isActive
         }
         user_list.append(user_data)
     return jsonify(user_list), 200
